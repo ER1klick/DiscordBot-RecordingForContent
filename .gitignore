@@ -1,0 +1,15 @@
+.env
+venv/
+.venv/
+env/
+.env/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.idea/
+.vscode/
+*.db
+*.sqlite3
+*.log
+.alembic_stash/
