@@ -5,3 +5,4 @@ from .template_role_model import TemplateRole
 from .event_model import Event
 from .event_slot_model import EventSlot
 from .signup_request_model import SignupRequest
+from .subscription_model import Subscription
