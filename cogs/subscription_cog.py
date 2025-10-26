@@ -30,12 +30,11 @@ class SubscriptionCog(commands.Cog):
         creator: disnake.User = commands.Param(description="Пользователь, на которого вы хотите подписаться")
     ):
         async with async_session_maker() as session:
-            # Проверяем, является ли целевой пользователь ивент-креатором
             target_user = await crud_user.get_or_create_user(session, creator.id, creator.name)
-            if target_user.bot_role != BotRole.EVENT_CREATOR:
+            if target_user.bot_role != [BotRole.EVENT_CREATOR, BotRole.ADMIN]:
                 await inter.response.send_message(
                     f"❌ Нельзя подписаться на {creator.mention}, так как он не является создателем событий.",
-                    ephemeral=True
+                    ephemeral=False
                 )
                 return
             
@@ -43,12 +42,12 @@ class SubscriptionCog(commands.Cog):
                 await crud_subscription.add_subscription(session, inter.author.id, creator.id)
                 await inter.response.send_message(
                     f"✅ Вы успешно подписались на уведомления от {creator.mention}!",
-                    ephemeral=True
+                    ephemeral=False
                 )
             except IntegrityError: # Эта ошибка возникнет, если подписка уже существует
                 await inter.response.send_message(
                     f"Вы уже подписаны на {creator.mention}.",
-                    ephemeral=True
+                    ephemeral=False
                 )
     
     @subscription.sub_command(name="unsubscribe", description="Отписаться от уведомлений создателя событий")
@@ -62,12 +61,12 @@ class SubscriptionCog(commands.Cog):
             if success:
                 await inter.response.send_message(
                     f"🗑️ Вы отписались от уведомлений {creator.mention}.",
-                    ephemeral=True
+                    ephemeral=False
                 )
             else:
                 await inter.response.send_message(
                     f"Вы не были подписаны на {creator.mention}.",
-                    ephemeral=True
+                    ephemeral=False
                 )
 
     @subscription.sub_command(name="list", description="Показать список ваших подписок")
@@ -76,7 +75,7 @@ class SubscriptionCog(commands.Cog):
             subscriptions = await crud_subscription.get_user_subscriptions(session, inter.author.id)
 
         if not subscriptions:
-            await inter.response.send_message("У вас пока нет активных подписок.", ephemeral=True)
+            await inter.response.send_message("У вас пока нет активных подписок.", ephemeral=False)
             return
 
         embed = disnake.Embed(
@@ -86,7 +85,7 @@ class SubscriptionCog(commands.Cog):
         )
         sub_list = [f"- <@{user.user_id}>" for user in subscriptions]
         embed.add_field(name="Создатели событий", value="\n".join(sub_list))
-        await inter.response.send_message(embed=embed, ephemeral=True)
+        await inter.response.send_message(embed=embed, ephemeral=False)
 
 
 def setup(bot):
