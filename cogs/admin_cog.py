@@ -26,11 +26,12 @@ class AdminCog(commands.Cog):
         user: disnake.User,
         role: str = commands.Param(choices=[BotRole.USER, BotRole.EVENT_CREATOR, BotRole.ADMIN])
     ):
+        await inter.response.defer(ephemeral=True)
         async with async_session_maker() as session:
             db_user = await get_or_create_user(session, user_id=user.id, username=user.name)
             await set_user_role(session, db_user, role)
         
-        await inter.response.send_message(
+        await inter.followup.send(
             f"Пользователю {user.mention} была присвоена роль `{role}`.",
             ephemeral=True
         )

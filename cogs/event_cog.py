@@ -41,6 +41,7 @@ def parse_datetime(datetime_str: str) -> int | None:
         return None
 
 def format_event_embed(event: Event, guild: disnake.Guild) -> disnake.Embed:
+
     """Создает и форматирует Embed для анонса события."""
     embed = disnake.Embed(
         title=f"📅 {event.title}",
@@ -83,11 +84,12 @@ class SignupModal(disnake.ui.Modal):
         super().__init__(title="Запись на событие", components=components)
 
     async def callback(self, inter: disnake.ModalInteraction):
+        await inter.response.defer(ephemeral=True)
         slot_input = inter.text_values["slot_input"]
         try:
             requested_slot_numbers = sorted(list(set(int(s.strip()) for s in slot_input.split(','))))
         except (ValueError, TypeError):
-            await inter.response.send_message("❌ Неверный формат. Введите только номера, разделенные запятой.", ephemeral=True)
+            await inter.followup.send("❌ Неверный формат. Введите только номера, разделенные запятой.", ephemeral=True)
             return
 
         valid_slots = [
@@ -95,7 +97,7 @@ class SignupModal(disnake.ui.Modal):
             if slot.slot_number in requested_slot_numbers and slot.signed_up_user_id is None
         ]
         if not valid_slots:
-            await inter.response.send_message("❌ Указанные слоты не существуют, заняты или введены неверно.", ephemeral=True)
+            await inter.followup.send("❌ Указанные слоты не существуют, заняты или введены неверно.", ephemeral=True)
             return
         
         await inter.response.defer(ephemeral=True)
@@ -132,7 +134,7 @@ class SignupView(disnake.ui.View):
         async with async_session_maker() as session:
             event = await crud_event.get_event_by_id(session, int(event_id_str))
             if not event:
-                await inter.response.send_message("Не удалось найти это событие. Возможно, оно было удалено.", ephemeral=True)
+                await inter.followup.send("Не удалось найти это событие. Возможно, оно было удалено.", ephemeral=True)
                 return
         
         modal = SignupModal(event)
@@ -236,6 +238,7 @@ class EventCog(commands.Cog):
 
     @commands.Cog.listener("on_raw_reaction_add")
     async def on_raw_reaction_add(self, payload: disnake.RawReactionActionEvent):
+        
         if payload.user_id == self.bot.user.id or str(payload.emoji) != "✅":
             return
 
